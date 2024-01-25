@@ -54,7 +54,7 @@ class ContestType:
 class Contest(models.Model, ContestType):
     name = models.TextField(help_text='Название контеста')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, help_text='Курс', related_name='contests')
-    ejudge_id = models.TextField(help_text='ID в Ejudge')
+    ejudge_id = models.IntegerField(help_text='ID в Ejudge')
     contest_type = models.CharField(max_length=3, choices=ContestType.TYPES, default=ContestType.ACM, help_text='Тип контеста')
     date = models.DateField(help_text='Дата публикации')
     statements = models.FileField(blank=True, upload_to=contest_statement_path, help_text='Условия')

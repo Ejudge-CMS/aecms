@@ -1,4 +1,4 @@
-from lib.judges.main import process_contest
+from lib.judges.main.process_contest import process_contest
 from courses.models import Standings
 
 
@@ -10,7 +10,7 @@ def get_standings_data(standings: Standings):
     for group in group_list:
         users.extend(group.users.all())
 
-    contests_models = standings.contests.filter(contest_id__isnull=False)
+    contests_models = standings.contests
     contests_models = contests_models.order_by('-date', '-id')
     contests = []
     for contest_model in contests_models:
