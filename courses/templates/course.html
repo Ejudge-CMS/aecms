@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    {% load static %}
+    <meta charset="utf-8">
+    <title>{{ course.title }}</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'course_style.css' %}">
+</head>
+
+<body>
+{% autoescape off %}
+<div class="main">
+    <header>
+        <h1>{{ course.title }}</h1>
+        <h2>{{ course.subtitle }}</h2>
+    </header>
+
+    <div class="sidebar">
+        {% if links %}
+            <h3>Полезные ссылки</h3>
+            {% for link in links %}
+                <a href="{{ link.link }}" target="_blank">{{ link.text }}</a><br>
+            {% endfor %}
+        {% endif %}
+        {% if teachers %}
+            <h3>Преподаватели</h3>
+            {% for teacher in teachers %}
+                {% if teacher.photo %}
+                    <img class="photo" src="{{ teacher.photo.url }}" alt="{{ teacher.photo.name }}"><br>
+                {% endif %}
+                <b>{{ teacher.name }}</b>
+                {% if teacher.telegram_id %}
+                    <br>Telegram: <a href="tg://resolve?domain={{ teacher.telegram_id }}" target=_blank>@{{ teacher.telegram_id }}</a>
+                {% endif %}
+                {% if teacher.vk_id %}
+                    <br><a href="https://vk.com/{{ teacher.vk_id }}" target=_blank>ВКонтакте</a>
+                {% endif %}
+                <br><br>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="lessons">
+        <h3 style="padding-left: 0.5em;">Контесты</h3>
+        {% for contest in contests %}
+            <div class="lesson" id="lesson_{{ contest.contest.id }}">
+                <div class="lesson_date">
+                    {{ contest.contest.date }}
+                </div>
+                <div class="lesson_topic">
+                    {{ contest.contest.title }}
+                </div>
+
+                {% if contest.contest.contest_type == contest.contest.OLYMP %}
+                    <style>
+                        #lesson_{{ contest.contest.id }} {
+                            border-left-color: #DA823B;
+                        }
+                    </style>
+                {% endif %}
+
+                <div class="clear"></div>
+                {% for link in contest.links %}
+                    <div class="contest_link">
+                        <a href="{{ link.link }}" target="_blank">{{ link.text }}</a>
+                    </div>
+                {% endfor %}
+
+                <div class="clear"></div>
+
+                <div class="contest_name">
+                Контест
+                </div>
+                <div class="contest_link">
+                    <a href="{{ ejudge_url }}{{ contest.contest.ejudge_id }}">Вход</a>
+                </div>
+                <div class="contest_link">
+                    {% if contest.contest.show_statements and contest.contest.statements %}
+                        <a href="{{ contest.contest.statements.url }}">Условия</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endautoescape %}
+</body>
+</html>
+

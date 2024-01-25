@@ -1,0 +1,11 @@
+{
+    "ejudge": {
+        "login": "ejudge",
+        "password": "ejudge",
+        "url": "http://localhost:8080",
+        "judges-dir": "/home/judges",
+        "external-dir": "/var/lib/ejudge/status"
+    },
+
+    "default-main": "1"
+}

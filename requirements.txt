@@ -1,0 +1,6 @@
+django
+untangle
+pytz
+requests
+transliterate
+django-ipware
