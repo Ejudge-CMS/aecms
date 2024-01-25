@@ -56,7 +56,7 @@ def process_contest(contest, users):
         'id': contest.id,
         'date': contest.date,
         'ejudge_id': contest.ejudge_id,
-        'title': contest.title,
+        'title': contest.name,
         'problems': problems,
         'users': user_info
     }
