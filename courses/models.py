@@ -30,8 +30,8 @@ class Teacher(models.Model):
     name = models.TextField(help_text='Название ссылки')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='teachers')
     photo = models.FileField(upload_to=course_teacher_path, help_text='Фото')
-    telegram_id = models.TextField(help_text='Telegram ID')
-    vk_id = models.TextField(help_text='VK ID')
+    telegram_id = models.TextField(blank=True, help_text='Telegram ID')
+    vk_id = models.TextField(blank=True, help_text='VK ID')
     priority = models.IntegerField(help_text='Приоритет', default=0)
 
     def __str__(self) -> str:
@@ -57,7 +57,8 @@ class Contest(models.Model, ContestType):
     ejudge_id = models.TextField(help_text='ID в Ejudge')
     contest_type = models.CharField(max_length=3, choices=ContestType.TYPES, default=ContestType.ACM, help_text='Тип контеста')
     date = models.DateField(help_text='Дата публикации')
-    statements = models.FileField(upload_to=contest_statement_path, help_text='Условия')
+    statements = models.FileField(blank=True, upload_to=contest_statement_path, help_text='Условия')
+    duration = models.IntegerField(default=0, help_text="Длительность контеста в минутах")
     show_statements = models.BooleanField(default=False, help_text='Показывать условия?')
 
     def save(self, force_insert: bool = ..., force_update: bool = ..., using: str | None = ..., update_fields: Iterable[str] | None = ...) -> None:
@@ -155,8 +156,8 @@ class FormBuilder(models.Model):
     label = models.TextField(unique=True, help_text='Название')
     title = models.TextField(help_text='Заголовок')
     subtitle = models.TextField(help_text='Подзаголовок', blank=True)
-    button_text = models.TextField(help_text='Текст на кнопке')
-    response_text = models.TextField(help_text='Текст результата')
+    button_text = models.TextField(default="Отправить", help_text='Текст на кнопке')
+    response_text = models.TextField(help_text='Шаблон результата')
     requests_limit = models.IntegerField(help_text='Лимит запросов на день', blank=True, null=True)
     register_name_template = models.TextField(help_text='Шаблон имени')
     register_api = models.ForeignKey(EjudgeRegisterApi, help_text='Шаблон регистрации', on_delete=models.CASCADE, related_name='forms')
