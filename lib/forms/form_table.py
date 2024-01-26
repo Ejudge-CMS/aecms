@@ -10,13 +10,12 @@ def get_form_columns(form: FormBuilder):
         columns.append(field.label)
         column_names.append(field.internal_name)
 
-    if len(form.register_api.all()) > 0:
-        columns.append("ejudge_login")
-        column_names.append("ejudge_login")
-        columns.append("ejudge_password")
-        column_names.append("ejudge_password")
-        columns.append("ejudge_id")
-        column_names.append("ejudge_id")
+    columns.append("ejudge_login")
+    column_names.append("ejudge_login")
+    columns.append("ejudge_password")
+    column_names.append("ejudge_password")
+    columns.append("ejudge_id")
+    column_names.append("ejudge_id")
 
     return [columns, column_names]
 
