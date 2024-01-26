@@ -22,18 +22,6 @@ document.addEventListener('DOMContentLoaded', function () {
     xhr.send();
 })();
 
-var getMarkColor = function(mark) {
-    if (mark >= 7.5) {
-        return 'lightgreen';
-    } else if (mark >= 5.5) {
-        return 'greenyellow';
-    } else if (mark >= 3.5) {
-        return 'yellow';
-    } else {
-        return 'lightcoral';
-    }
-};
-
 var addCell = function(row, text, klass, rowSpan, colSpan) {
     let cell = row.insertCell();
     cell.innerHTML = text;
@@ -55,6 +43,61 @@ var compareUsers = function(a, b) {
         return a['penalty'] - b['penalty'];
     }
     return a['name'].localeCompare(b['name']);
+};
+
+var getMarkColor = function(mark) {
+    if (mark >= 7.5) {
+        return 'lightgreen';
+    } else if (mark >= 5.5) {
+        return 'greenyellow';
+    } else if (mark >= 3.5) {
+        return 'yellow';
+    } else {
+        return 'lightcoral';
+    }
+};
+
+var calculateMark = function(users, contests) {
+    let problem_max_score = [];
+    let problem_accepted = [];
+    let total_scores = {};
+    contests.forEach(function(contest, i) {
+        total_scores[i] = [];
+        problem_max_score.push([]);
+        problem_accepted.push([]);
+        contest['problems'].forEach(function(problem, j) {
+            problem_max_score[i].push(0);
+            problem_accepted[i].push(0);
+        });
+    });
+
+    let user_total_score = {};
+    let user_problem_score = {};
+    users.forEach(function(user) {
+        let id = user['id'];
+        user_total_score[id] = 0;
+        user_problem_score[id] = [];
+        user['scores'] = [];
+        contests.forEach(function(contest, c_id) {
+            let total_score = 0;
+            user_problem_score[id].push([]);
+            total_scores[c_id].push(contest['users'][id].slice(0));
+            contest['users'][id].forEach(function(result, p_id) {
+                let score = result['score'];
+                let is_accepted = false;
+                if (score > 0) {
+                    is_accepted = true;
+                }
+                total_score += score;
+                problem_max_score[c_id][p_id] = Math.max(problem_max_score[c_id][p_id], score);
+                problem_accepted[c_id][p_id] += (+is_accepted);
+                user_problem_score[id][c_id].push(score);
+            });
+
+            user['scores'].push(total_score);
+            user_total_score[id] += total_score;
+        });
+    });
 };
 
 var calculateInformation = function(users, contests) {
@@ -116,24 +159,10 @@ var addProblemCell = function(row, problem) {
             if (penalty > 9) {
                 cell.title = '+' + penalty;
             }
-        } else if (problem['verdict'] === 'RJ' || problem['verdict'] === 'IG') {
-            let cell = addCell(row, 'D:', 'gray rotating');
-            cell.title = 'Отклонено';
-            cell.style.backgroundColor = '#f7943c';
-        } else if (problem['verdict'] === 'PR') {
+        } else if (problem['verdict'] === 'PD') {
             let cell = addCell(row, '?', 'gray');
-            cell.title = 'Ожидает подтверждения';
+            cell.title = 'Ожидает проверки';
             cell.style.backgroundColor = '#ffdc33';
-        } else if (problem['verdict'] === 'AC') {
-            let cell = addCell(row, '?', 'gray');
-            cell.title = 'Принято к проверке';
-            cell.style.backgroundColor = '#fbe995';
-        } else if (problem['verdict'] === 'SM') {
-            let cell = addCell(row, '<div class="big_image"></div>', 'gray defense');
-            cell.title = 'Призван на защиту';
-        } else if (problem['verdict'] === 'SV') {
-            let cell = addCell(row, '', "gray ban");
-            cell.title = "Нарушены правила оформления"
         } else if (problem['verdict'] === 'DQ') {
             let cell = addCell(row, 'ᕁ_ᕁ', 'gray');
             cell.title = 'Дисквалифицированно';
@@ -167,6 +196,7 @@ var addHeader = function(holder, contests) {
     if (!is_olymp) {
         addCell(header_row1, 'Штраф', '', 2, 1);
     }
+
     if (contests.length === 0) {
         addCell(header_row1, '', 'invisible contest_title');
         addCell(header_row2, '', 'invisible');
@@ -174,6 +204,7 @@ var addHeader = function(holder, contests) {
 
     contests.forEach(function(contest, idx) {
         let problems = contest['problems'];
+        let coefficient = contest['coefficient'];
         let title_text = contest['title'];
         let title;
         if (contest_id === -1) {
@@ -186,7 +217,7 @@ var addHeader = function(holder, contests) {
             let cell = addCell(header_row2, problem['short'], 'problem_letter gray');
             cell.title = problem['long'];
         });
-        let cell = addCell(header_row2, 'Σ', 'problem_letter gray');
+        addCell(header_row2, 'Σ', 'problem_letter gray');
     });
 };
 
@@ -243,6 +274,7 @@ var addBody = function(body, users, contests) {
         let id = user['id'];
         let row = body.insertRow();
         addCell(row, i + 1);
+        addCell(row, user['group_short']);
         addCell(row, user['name'], 'name');
         addCell(row, user['score']);
         if (!is_olymp) {
@@ -291,6 +323,7 @@ var buildStandings = function() {
 
     let users = data['users'];
     calculateInformation(users, contests);
+    calculateMark(users, contests);
     users.sort(compareUsers);
     users = users.filter(user => (user['score'] > 0) || (user['penalty'] !== undefined && user['penalty'] > 0));
 
