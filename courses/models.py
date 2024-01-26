@@ -7,7 +7,7 @@ def course_teacher_path(instanse, filename):
     return 'course_{0}/teachers/{1}'.format(instanse.course.label, filename)
 
 def contest_statement_path(instance, filename):
-    return 'course_{0}/contests/contest_{1}/{2}'.format(instance.course.label, instance.id, filename)
+    return 'course_{0}/{1}'.format(instance.course.label, filename)
 
 class Course(models.Model):
     title = models.TextField(help_text='Имя курса')
