@@ -1,8 +1,8 @@
 # AECMS
 
-## Руководство по установке
+## Руководство по установке (Ubuntu)
 
-Клонируйте репозиторий:
+Клонируйте репозиторий в папку /opt:
 ```console
 $ git clone https://github.com/Semen-prog/aecms
 $ cd aecms
@@ -33,7 +33,7 @@ $ cd aecms
 
 Настройте права:
 ```console
-[aecms] # chown -R :www-data .
+[aecms] # chown -R your_user:www-data .
 [aecms] # chmod -R 775 .
 ```
 
@@ -82,6 +82,8 @@ Listen 8000
 ```console
 # a2ensite /etc/apache2/sites-available/aecms.conf
 ```
+
+Добавьте ваш хост в список-переменную ALLOWED_HOSTS в файле aecms/aecms/settings.py
 
 ## Конфигурационный файл
 
