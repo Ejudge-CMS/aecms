@@ -42,29 +42,29 @@ $ cd aecms
 # vim /etc/apache2/sites-available/aecms.conf
 ```
 
-Заполните его:
+Заполните его (/path/to/repo - путь до репозитория, вероятно равен /opt/aecms):
 ```vim
 <VirtualHost *:8000>
 
-        DocumentRoot /path/to/repo/aecms/
+        DocumentRoot /path/to/repo/
 
         ErrorLog ${APACHE_LOG_DIR}/aecms_error.log
         CustomLog ${APACHE_LOG_DIR}/aecms_access.log combined
-        Alias /static /path/to/repo/aecms/static
-        <Directory /path/to/repo/aecms/static>
+        Alias /static /path/to/repo/static
+        <Directory /path/to/repo/static>
                 Require all granted
         </Directory>
 
-        <Directory /path/to/repo/aecms/aecms>
+        <Directory /path/to/repo/aecms>
                 <Files wsgi.py>
                         Require all granted
                 </Files>
         </Directory>
 
-        WSGIDaemonProcess alg-ej.ru python-path=/path/to/repo/aecms python-home=/path/to/repo/aecms/cms
+        WSGIDaemonProcess alg-ej.ru python-path=/path/to/repo python-home=/path/to/repo/cms
         WSGIProcessGroup alg-ej.ru
         WSGIApplicationGroup %{GLOBAL}
-        WSGIScriptAlias / /path/to/repo/aecms/aecms/wsgi.py
+        WSGIScriptAlias / /path/to/repo/aecms/wsgi.py
 
 </VirtualHost>
 ```
@@ -76,6 +76,14 @@ $ cd aecms
 Listen 8000
 
 ...
+```
+
+Установите модуль wsgi:
+
+```console
+# apt install libapache2-mod-wsgi
+# a2enmod wsgi
+# systemctl restart apache2
 ```
 
 Запустите сайт:
