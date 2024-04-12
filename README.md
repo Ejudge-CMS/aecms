@@ -81,7 +81,7 @@ Listen 8000
 Установите модуль wsgi:
 
 ```console
-# apt install libapache2-mod-wsgi
+# apt install libapache2-mod-wsgi-py3
 # a2enmod wsgi
 # systemctl restart apache2
 ```
