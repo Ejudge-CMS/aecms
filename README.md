@@ -55,6 +55,11 @@
                 Require all granted
         </Directory>
 
+        Alias /static /path/to/repo/files
+        <Directory /path/to/repo/files>
+                Require all granted
+        </Directory>
+
         <Directory /path/to/repo/aecms>
                 <Files wsgi.py>
                         Require all granted
