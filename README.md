@@ -4,27 +4,27 @@
 
 Клонируйте репозиторий в папку /opt:
 ```console
-$ git clone https://github.com/Semen-prog/aecms
-$ cd aecms
+[/opt] $ git clone https://github.com/Semen-prog/aecms
+[/opt] $ cd aecms
 ```
 
 Создайте виртуальное окружение и установите зависимости:
 ```console
-[aecms] $ virtualenv your_env
-[aecms] $ source your_env/bin/activate
-(your_env) [aecms] $ pip install -r requirements.txt
+[/opt/aecms] $ virtualenv your_env
+[/opt/aecms] $ source your_env/bin/activate
+(your_env) [/opt/aecms] $ pip install -r requirements.txt
 ```
 
 Настройте django-приложение:
 ```console
-(your_env) [aecms] $ ./manage.py makemigrations
-(your_env) [aecms] $ ./manage.py migrate
-(your_env) [aecms] $ ./manage.py collectstatic
+(your_env) [/opt/aecms] $ ./manage.py makemigrations
+(your_env) [/opt/aecms] $ ./manage.py migrate
+(your_env) [/opt/aecms] $ ./manage.py collectstatic
 ```
 
 Создайте суперпользователя. Укажите имя пользователя и пароль. Они вам понадобятся для работы с сайтом.
 ```console
-(your_env) [aecms] $ ./manage.py createsuperuser
+(your_env) [/opt/aecms] $ ./manage.py createsuperuser
 ```
 
 ## Настройка Apache
@@ -33,8 +33,8 @@ $ cd aecms
 
 Настройте права:
 ```console
-[aecms] # chown -R your_user:www-data .
-[aecms] # chmod -R 775 .
+[/opt/aecms] # chown -R your_user:www-data .
+[/opt/aecms] # chmod -R 775 .
 ```
 
 Создайте конфигурационный файл сайта:
@@ -61,7 +61,7 @@ $ cd aecms
                 </Files>
         </Directory>
 
-        WSGIDaemonProcess alg-ej.ru python-path=/path/to/repo python-home=/path/to/repo/cms
+        WSGIDaemonProcess alg-ej.ru python-path=/path/to/repo python-home=/path/to/repo/your_env
         WSGIProcessGroup alg-ej.ru
         WSGIApplicationGroup %{GLOBAL}
         WSGIScriptAlias / /path/to/repo/aecms/wsgi.py
