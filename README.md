@@ -88,7 +88,9 @@ Listen 8000
 
 Запустите сайт:
 ```console
-# a2ensite /etc/apache2/sites-available/aecms.conf
+# cd /etc/apache2/sites-available
+[/etc/apache2/sites-available] # a2ensite aecms.conf
+# systemctl reload apache2
 ```
 
 Добавьте ваш хост в список-переменную ALLOWED_HOSTS в файле aecms/aecms/settings.py
