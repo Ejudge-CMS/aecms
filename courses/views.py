@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse, HttpRequest
 from lib.standings.standings_data import get_standings_data
 from .models import *
 from transliterate import translit
@@ -8,11 +8,17 @@ from aecms.settings import DEFAULT_MAIN, EJUDGE_URL, EJUDGE_AUTH
 from lib.judges.ejudge.registration_api import EjudgeApiSession
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
-from lib.forms.form_table import get_form_columns, get_form_entry_row
 
-import random, re, csv, json, datetime
+import csv, json
 
-from ipware import get_client_ip
+class StandingsReload(View):
+    def get(self, request: HttpRequest):
+        if not request.user.is_superuser:
+            return HttpResponseBadRequest("Not admin")
+        course_id = request.GET.get('course_id')
+        contest_type = request.GET.get('type')
+        contests = Contest.objects.filter(course_id=course_id, type=contest_type)
+        return JsonResponse({'contests': contests})
 
 class MainView(View):
     def get(self, request, main_id=DEFAULT_MAIN):
@@ -78,40 +84,6 @@ class StandingsDataView(View):
             'contests': contests,
         })
     
-def register_user(ejudge_register_api: EjudgeRegisterApi, name: str):
-    login = ejudge_register_api.login
-    api_session = EjudgeApiSession(EJUDGE_AUTH['login'], EJUDGE_AUTH['password'], EJUDGE_URL)
-    int_login = True
-    if ejudge_register_api.use_surname:
-        surname = translit(name.split()[0], 'ru', reversed=True)
-        surname = re.sub(r'\W+', '', surname).lower()
-        login = f'{login}{surname}'
-        int_login = False
-    user = api_session.create_user(login, int_login)
-    group_name = name
-    p = Participant(
-        name=group_name,
-        login=user['login'],
-        api=ejudge_register_api,
-        group=ejudge_register_api.group,
-        ejudge_id=user["user_id"]
-    )
-    print('!')
-    p.save()
-    return user
-
-@method_decorator(csrf_exempt, name='dispatch')
-class EjudgeRegister(View):
-    def post(self, request):
-        register_id = request.POST.get('register_id')
-        secret = request.POST.get('secret')
-        ejudge_register_api = get_object_or_404(EjudgeRegisterApi, id=register_id)
-        if secret != ejudge_register_api.secret:
-            return HttpResponseBadRequest("Wrong secret")
-        name = request.POST.get('name')
-        user = register_user(ejudge_register_api, name)
-        return JsonResponse(user)
-    
 class FormView(View):
     def get(self, request, form_label):
         form = get_object_or_404(FormBuilder, label=form_label)
@@ -149,15 +121,6 @@ class FormView(View):
         fields = form.fields.order_by("id")
         result = dict()
 
-        user_ip, _ = get_client_ip(request)
-
-        if form.requests_limit is not None and \
-                form.requests_limit > 0:
-            day_ago = datetime.datetime.now() - datetime.timedelta(days=1)
-            entries = len(form.entries.filter(ip=user_ip, time__gte=day_ago))
-            if entries >= form.requests_limit:
-                return HttpResponse("Превышенно максимальное число запросов")
-
         for field in fields:
             if field.type in [FormField.STR, FormField.MAIL, FormField.PHONE, FormField.LONG, FormField.DATE, FormField.SELECT]:
                 result[field.internal_name] = request.POST.get(field.internal_name, '')
@@ -169,80 +132,12 @@ class FormView(View):
                 result[field.internal_name] = field.internal_name in request.POST
         print(result)
         name = form.register_name_template.format(**result)
-        ejudge_register_api = form.register_api
-        user_login = register_user(ejudge_register_api, name)
-        result["ejudge_login"] = user_login["login"]
-        result["ejudge_password"] = user_login["password"]
-        result["ejudge_id"] = user_login["user_id"]
-
-        entry = FormEntry.objects.create(form=form, data=json.dumps(result), ip=user_ip)
-        entry.save()
+        api_session = EjudgeApiSession(EJUDGE_AUTH['login'], EJUDGE_AUTH['password'], EJUDGE_URL)
+        user = api_session.create_user(form.login_prefix)
+        for course in form.courses:
+            Participant(name=name, login=user['login'], course=course, ejudge_id=user['user_id']).save()
+        result["ejudge_login"] = user["login"]
+        result["ejudge_password"] = user["password"]
+        result["ejudge_id"] = user["user_id"]
 
         return HttpResponse(form.response_text.format(**result))
-        
-class FormDataView(View):
-    def get(self, request):
-        user = request.user
-        if not user.is_superuser:
-            return HttpResponseBadRequest("Not admin")
-        forms = FormBuilder.objects.order_by("-id")
-        res = []
-        for form in forms:
-            res.append(dict())
-            res[-1]["form"] = form
-            res[-1]["entries"] = len(form.entries.all())
-
-        return render(
-            request,
-            'form_data.html',
-            {
-                "forms": res
-            }
-        )
-
-
-class FormJsonExport(View):
-    def get(self, request, form_label):
-        user = request.user
-        if not user.is_superuser:
-            return HttpResponseBadRequest("Not admin")
-
-        form = get_object_or_404(FormBuilder, label=form_label)
-
-        entries = form.entries.order_by("id")
-
-        result = []
-        for entry in entries:
-            entry_dict = json.loads(entry.data)
-            entry_dict["ip"] = entry.ip
-            entry_dict["time"] = entry.time.isoformat()
-            result.append(entry_dict)
-
-        return JsonResponse(result, safe=False)
-
-
-class FormCSVExport(View):
-    def get(self, request, form_label):
-        user = request.user
-        if not user.is_superuser:
-            return HttpResponseBadRequest("Not admin")
-
-        form = get_object_or_404(FormBuilder, label=form_label)
-
-        response = HttpResponse(
-            content_type='text/csv',
-        )
-
-        response['Content-Disposition'] = 'attachment; filename="{label}.csv"'.format(label=form.label)
-        writer = csv.writer(response)
-
-        columns, column_names = get_form_columns(form)
-
-        writer.writerow(columns)
-
-        entries = form.entries.order_by("id")
-
-        for entry in entries:
-            writer.writerow(get_form_entry_row(entry, column_names))
-
-        return response

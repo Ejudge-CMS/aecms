@@ -15,6 +15,30 @@ class BigLinkInline(admin.TabularInline):
     }
     model = BigLink
 
+class CourseLinkInline(admin.TabularInline):
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
+    }
+    model = CourseLink
+
+class ContestLinkInline(admin.TabularInline):
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
+    }
+    model = ContestLink
+
+class FormFieldSelectOptionInline(admin.TabularInline):
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
+    }
+    model = FormFieldSelectOption
+
+class FormFieldInline(admin.TabularInline):
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
+    }
+    model = FormField
+
 @admin.register(Main)
 class MainAdmin(admin.ModelAdmin):
     formfield_overrides = {
@@ -23,31 +47,13 @@ class MainAdmin(admin.ModelAdmin):
     list_display = ['id', 'title', 'subtitle']
     inlines = [BigLinkInline, MainLinkInline]
 
-class CourseTeacherInline(admin.TabularInline):
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
-    }
-    model = Teacher
-
-class CourseLinkInline(admin.TabularInline):
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
-    }
-    model = CourseLink
-
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
     }
     list_display = ['id', 'title', 'subtitle']
-    inlines = [CourseLinkInline, CourseTeacherInline]
-
-class ContestLinkInline(admin.TabularInline):
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
-    }
-    model = ContestLink
+    inlines = [CourseLinkInline]
 
 @admin.register(Contest)
 class ContestAdmin(admin.ModelAdmin):
@@ -55,27 +61,13 @@ class ContestAdmin(admin.ModelAdmin):
         models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
     }
     list_display = ['id', 'name', 'ejudge_id']
-    inlines = [ContestLinkInline]
-
-@admin.register(ParticipantGroup)
-class ParticipantGroupAdmin(admin.ModelAdmin):
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
-    }
-    list_display = ['id', 'name', 'short_name']
 
 @admin.register(Participant)
 class ParticipantAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
     }
-    list_display = ['id', 'name', 'login']
-
-class FormFieldSelectOptionInline(admin.TabularInline):
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
-    }
-    model = FormFieldSelectOption
+    list_display = ['id', 'name', 'login', 'course']
 
 @admin.register(FormField)
 class FormFieldAdmin(admin.ModelAdmin):
@@ -85,12 +77,6 @@ class FormFieldAdmin(admin.ModelAdmin):
     list_display = ['id', 'label', 'type']
     inlines = [FormFieldSelectOptionInline]
 
-class FormFieldInline(admin.TabularInline):
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
-    }
-    model = FormField
-
 @admin.register(FormBuilder)
 class FormBuilderAdmin(admin.ModelAdmin):
     formfield_overrides = {
@@ -99,16 +85,11 @@ class FormBuilderAdmin(admin.ModelAdmin):
     list_display = ['id', 'title', 'subtitle']
     inlines = [FormFieldInline]
 
-@admin.register(EjudgeRegisterApi)
-class EjudgeRegisterApiAdmin(admin.ModelAdmin):
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
-    }
-    list_display = ['id', 'label', 'login']
-
 @admin.register(Standings)
 class StandingsAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
     }
     list_display = ['id', 'label', 'title']
+    class Media:
+        js = ('admin/js/jquery.init.js', 'admin/js/standings_reload.js')

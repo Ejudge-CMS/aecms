@@ -42,13 +42,13 @@ def load_ejudge_contest(contest_id, ejudge_ids):
             user_id = ejudge_ids[ejudge_id]
 
             prob_id = problem_index[run['prob_id']]
-            score = (1 if status == GLOBAL_OK else 0)
+            score = (1 if status == OK else 0)
             if run['score'] is not None:
                 score = int(run['score'])
-                status = GLOBAL_PT
-            if run['status'] == GLOBAL_DQ:
+                status = PT
+            if run['status'] == DQ:
                 score = 0
-                status = GLOBAL_DQ
+                status = DQ
 
             runs_list.append({
                 'user_id': user_id,
@@ -61,3 +61,67 @@ def load_ejudge_contest(contest_id, ejudge_ids):
             pass
 
     return [problems, runs_list]
+
+def process_ejudge_contest(contest, users):
+
+    ejudge_ids = {}
+    for user in users:
+        ejudge_ids[user.ejudge_id] = user.id
+
+    problems, runs_list = load_ejudge_contest(contest.ejudge_id, ejudge_ids)
+
+    user_info = {}
+
+    user_ids = {user.id for user in users}
+
+    for uid in user_ids:
+        user_info[uid] = []
+        for _ in range(len(problems)):
+            user_info[uid].append({
+                'score': 0,
+                'penalty': 0,
+                'verdict': None
+            })
+
+    for run in runs_list:
+        try:
+            user_id = run['user_id']
+
+            if user_id not in ejudge_ids:
+                continue
+
+            user_id = ejudge_ids[user_id]
+            status = run['status']
+
+            time = run['time']
+            if contest.duration != 0 and time > contest.duration * 60:
+                continue
+
+            prob_id = run['prob_id']
+            score = run['score']
+
+            info = user_info[user_id][prob_id]
+
+            if status in {IC, DQ, SV}:
+                info['penalty'] += 1
+            if status == DQ:
+                info['verdict'] = DQ
+                info['score'] = 0
+                continue
+            if info['verdict'] == DQ:
+                continue
+            if info['verdict'] == OK or (info['verdict'] == PD and status != OK):
+                continue
+            info['score'] = max(info['score'], score)
+            info['verdict'] = status
+        except:
+            pass
+
+    return {
+        'id': contest.id,
+        'date': contest.date,
+        'ejudge_id': contest.ejudge_id,
+        'title': contest.name,
+        'problems': problems,
+        'users': user_info
+    }

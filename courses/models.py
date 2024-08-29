@@ -4,7 +4,7 @@ from aecms.settings import EJUDGE_AUTH, EJUDGE_URL
 from django.db import models
 
 def course_teacher_path(instanse, filename):
-    return 'courses/{0}/teachers/{1}'.format(instanse.course.label, filename)
+    return 'teachers/{0}'.format(filename)
 
 def contest_statement_path(instance, filename):
     return 'courses/{0}/statements/{1}'.format(instance.course.label, filename)
@@ -16,7 +16,7 @@ class Course(models.Model):
     priority = models.IntegerField(help_text='Приоритет', default=0)
 
     def __str__(self):
-        return "{} ({})".format(self.title, self.id)
+        return self.title
 
 class Main(models.Model):
     title = models.TextField(help_text='Заголовок')
@@ -28,7 +28,7 @@ class Main(models.Model):
 
 class Teacher(models.Model):
     name = models.TextField(help_text='Название ссылки')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='teachers')
+    course = models.ManyToManyField(Course, related_name='teachers')
     photo = models.FileField(upload_to=course_teacher_path, help_text='Фото')
     telegram_id = models.TextField(blank=True, help_text='Telegram ID')
     vk_id = models.TextField(blank=True, help_text='VK ID')
@@ -58,19 +58,14 @@ class Contest(models.Model, ContestType):
     contest_type = models.CharField(max_length=3, choices=ContestType.TYPES, default=ContestType.ACM, help_text='Тип контеста')
     date = models.DateField(help_text='Дата публикации')
     statements = models.FileField(blank=True, upload_to=contest_statement_path, help_text='Условия')
-    duration = models.IntegerField(default=0, help_text="Длительность контеста в минутах")
+    duration = models.IntegerField(default=0, help_text="Длительность контеста в минутах (0 - бесконечный)")
     show_statements = models.BooleanField(default=False, help_text='Показывать условия?')
 
     def save(self, force_insert: bool = ..., force_update: bool = ..., using: str | None = ..., update_fields: Iterable[str] | None = ...) -> None:
-
         if self.pk is None:
-            users = []
-            for api in self.course.apis.all():
-                users.extend(api.users.all())
             rapi = EjudgeApiSession(EJUDGE_AUTH['login'], EJUDGE_AUTH['password'], EJUDGE_URL)
-            for user in users:
+            for user in self.course.users:
                 rapi.add_registration(user.ejudge_id, user.login, self.ejudge_id, user.name)
-
         return super().save()
 
     def __str__(self) -> str:
@@ -112,41 +107,17 @@ class MainLink(models.Model):
     def __str__(self) -> str:
         return self.text
     
-class ParticipantGroup(models.Model):
-    name = models.TextField(help_text='Название группы')
-    short_name = models.TextField(help_text='Название для standings')
-
-    def __str__(self) -> str:
-        return '{} ({})'.format(self.name, self.id)
-    
-class EjudgeRegisterApi(models.Model):
-    label = models.TextField(unique=True, help_text='Название')
-    secret = models.TextField(help_text='Секретный код')
-    login = models.TextField(help_text='Префикс логина')
-    use_surname = models.BooleanField(default=False, help_text='Использовать имя в логине?')
-    group = models.ForeignKey(ParticipantGroup, help_text='Регистрации', related_name='apis', on_delete=models.CASCADE)
-    courses = models.ManyToManyField(Course, help_text='Курсы', related_name='apis')
-
-    def __str__(self) -> str:
-        return self.label
-    
 class Participant(models.Model):
     name = models.TextField(help_text='Имя')
     login = models.TextField(help_text='Логин')
-    group = models.ForeignKey(ParticipantGroup, related_name='users', on_delete=models.CASCADE)
-    api = models.ForeignKey(EjudgeRegisterApi, related_name='users', on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name="users")
     ejudge_id = models.IntegerField(help_text='ID в Ejudge')
 
     def save(self, force_insert: bool = ..., force_update: bool = ..., using: str | None = ..., update_fields: Iterable[str] | None = ...) -> None:
-
         if self.pk is None:
-            contests = []
-            for course in self.api.courses.all():
-                contests.extend(course.contests.all())
             rapi = EjudgeApiSession(EJUDGE_AUTH['login'], EJUDGE_AUTH['password'], EJUDGE_URL)
-            for contest in contests:
+            for contest in self.course.contests:
                 rapi.add_registration(self.ejudge_id, self.login, contest.ejudge_id, self.name)
-
         return super().save()
 
     def __str__(self) -> str:
@@ -158,9 +129,10 @@ class FormBuilder(models.Model):
     subtitle = models.TextField(help_text='Подзаголовок', blank=True)
     button_text = models.TextField(default="Отправить", help_text='Текст на кнопке')
     response_text = models.TextField(help_text='Шаблон результата')
-    requests_limit = models.IntegerField(help_text='Лимит запросов на день', blank=True, null=True)
     register_name_template = models.TextField(help_text='Шаблон имени')
-    register_api = models.ForeignKey(EjudgeRegisterApi, help_text='Шаблон регистрации', on_delete=models.CASCADE, related_name='forms')
+    secret = models.TextField(help_text='Секретный код')
+    login_prefix = models.TextField(help_text='Префикс логина')
+    courses = models.ManyToManyField(Course, help_text='Курсы', related_name='forms')
 
     def __str__(self) -> str:
         return self.label
@@ -199,12 +171,6 @@ class FormFieldType:
         "TEXT": TEXT,
         "SELECT": SELECT,
     }
-
-class FormEntry(models.Model):
-    form = models.ForeignKey(FormBuilder, related_name="entries", on_delete=models.CASCADE)
-    data = models.TextField()
-    ip = models.TextField(blank=True)
-    time = models.DateTimeField(auto_now_add=True)
     
 class FormField(models.Model, FormFieldType):
     form = models.ForeignKey(FormBuilder, on_delete=models.CASCADE, help_text='Форма', related_name='fields')
@@ -214,7 +180,6 @@ class FormField(models.Model, FormFieldType):
     internal_name = models.TextField(help_text='Полное название')
     description = models.TextField(blank=True, help_text='Описание')
 
-
 class FormFieldSelectOption(models.Model):
     field = models.ForeignKey(FormField, on_delete=models.CASCADE, help_text='Поле', related_name='options')
     label = models.TextField(help_text='Текст')
@@ -222,9 +187,9 @@ class FormFieldSelectOption(models.Model):
 class Standings(models.Model, ContestType):
     title = models.TextField(help_text='Заголовок')
     label = models.TextField(unique=True, help_text='Идентификатор')
-    groups = models.ManyToManyField(ParticipantGroup, help_text='Группы', related_name='standings')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, help_text='Курс')
     contests = models.ManyToManyField(Contest, help_text='Контесты', related_name='standings')
-    contest_type = models.CharField(max_length=3, choices=ContestType.TYPES, default=ContestType.ACM)
+    type = models.CharField(max_length=3, choices=ContestType.TYPES, default=ContestType.ACM)
 
     class Meta:
         verbose_name_plural = "Standings"
