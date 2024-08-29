@@ -32,7 +32,7 @@
                 {% endif %}
                 <b>{{ teacher.name }}</b>
                 {% if teacher.telegram_id %}
-                    <br>Telegram: <a href="tg://resolve?domain={{ teacher.telegram_id }}" target=_blank>@{{ teacher.telegram_id }}</a>
+                    <br>Telegram: <a href="https://t.me/{{ teacher.telegram_id }}" target=_blank>@{{ teacher.telegram_id }}</a>
                 {% endif %}
                 {% if teacher.vk_id %}
                     <br><a href="https://vk.com/{{ teacher.vk_id }}" target=_blank>ВКонтакте</a>
