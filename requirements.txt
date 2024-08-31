@@ -3,4 +3,3 @@ untangle
 pytz
 requests
 transliterate
-django-ipware
