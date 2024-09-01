@@ -3,12 +3,8 @@ from courses.models import Standings
 
 
 def get_standings_data(standings: Standings):
-    group_list = standings.groups.all()
-
     users_data = []
-    users = []
-    for group in group_list:
-        users.extend(group.users.all())
+    users = standings.course.users.all()
 
     contests_models = standings.contests
     contests_models = contests_models.order_by('-date', '-id')
@@ -17,14 +13,11 @@ def get_standings_data(standings: Standings):
         contest = process_contest(contest_model, users)
         contests.append(contest)
 
-    for group in group_list:
-        for user in group.users.all():
-            users_data.append({
-                'id': user.id,
-                'name': user.name,
-                'group': group.name,
-                'group_short': group.short_name,
-            })
+    for user in users:
+        users_data.append({
+            'id': user.id,
+            'name': user.name
+        })
                 
 
     return [users_data, contests]

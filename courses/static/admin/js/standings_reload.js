@@ -13,7 +13,7 @@
             }
 
             $.ajax({
-                url: '/admin/get-standings-contests/',  // You'll need to create this view
+                url: '/standings_contests/',
                 data: {
                     'course_id': courseId,
                     'type': type
@@ -22,15 +22,16 @@
                     contestsField.html('');
                     $.each(data.contests, function (index, contest) {
                         var option = $('<option></option>')
-                            .attr('value', contest.id)
-                            .text(contest.name);
+                            .attr('value', contest.pk)
+                            .text(contest.fields.name);
                         contestsField.append(option);
                     });
                 }
             });
         }
 
-        contestsField.change(updateContests);
-        updateTags();
+        courseField.change(updateContests);
+        typeField.change(updateContests);
+        updateContests();
     });
 })(django.jQuery);

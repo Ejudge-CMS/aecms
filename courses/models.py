@@ -64,7 +64,7 @@ class Contest(models.Model, ContestType):
     def save(self, force_insert: bool = ..., force_update: bool = ..., using: str | None = ..., update_fields: Iterable[str] | None = ...) -> None:
         if self.pk is None:
             rapi = EjudgeApiSession(EJUDGE_AUTH['login'], EJUDGE_AUTH['password'], EJUDGE_URL)
-            for user in self.course.users:
+            for user in self.course.users.all():
                 rapi.add_registration(user.ejudge_id, user.login, self.ejudge_id, user.name)
         return super().save()
 
@@ -116,7 +116,7 @@ class Participant(models.Model):
     def save(self, force_insert: bool = ..., force_update: bool = ..., using: str | None = ..., update_fields: Iterable[str] | None = ...) -> None:
         if self.pk is None:
             rapi = EjudgeApiSession(EJUDGE_AUTH['login'], EJUDGE_AUTH['password'], EJUDGE_URL)
-            for contest in self.course.contests:
+            for contest in self.course.contests.all():
                 rapi.add_registration(self.ejudge_id, self.login, contest.ejudge_id, self.name)
         return super().save()
 
@@ -130,7 +130,6 @@ class FormBuilder(models.Model):
     button_text = models.TextField(default="Отправить", help_text='Текст на кнопке')
     response_text = models.TextField(help_text='Шаблон результата')
     register_name_template = models.TextField(help_text='Шаблон имени')
-    secret = models.TextField(help_text='Секретный код')
     login_prefix = models.TextField(help_text='Префикс логина')
     courses = models.ManyToManyField(Course, help_text='Курсы', related_name='forms')
 

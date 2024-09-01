@@ -8,17 +8,17 @@ from aecms.settings import DEFAULT_MAIN, EJUDGE_URL, EJUDGE_AUTH
 from lib.judges.ejudge.registration_api import EjudgeApiSession
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.core import serializers
 
 import csv, json
 
 class StandingsReload(View):
     def get(self, request: HttpRequest):
-        if not request.user.is_superuser:
-            return HttpResponseBadRequest("Not admin")
         course_id = request.GET.get('course_id')
         contest_type = request.GET.get('type')
-        contests = Contest.objects.filter(course_id=course_id, type=contest_type)
-        return JsonResponse({'contests': contests})
+        contests = Contest.objects.filter(course_id=course_id, contest_type=contest_type)
+        json.dumps()
+        return JsonResponse({'contests': json.loads(serializers.serialize('json', contests))})
 
 class MainView(View):
     def get(self, request, main_id=DEFAULT_MAIN):
@@ -123,18 +123,18 @@ class FormView(View):
 
         for field in fields:
             if field.type in [FormField.STR, FormField.MAIL, FormField.PHONE, FormField.LONG, FormField.DATE, FormField.SELECT]:
-                result[field.internal_name] = request.POST.get(field.internal_name, '')
+                result[field.label] = request.POST.get(field.label, '')
 
             if field.type == FormField.INTEGER:
-                result[field.internal_name] = int(request.POST.get(field.internal_name, 0))
+                result[field.label] = int(request.POST.get(field.label, 0))
 
             if field.type == FormField.CHECKBOX:
-                result[field.internal_name] = field.internal_name in request.POST
+                result[field.label] = field.label in request.POST
         print(result)
         name = form.register_name_template.format(**result)
         api_session = EjudgeApiSession(EJUDGE_AUTH['login'], EJUDGE_AUTH['password'], EJUDGE_URL)
         user = api_session.create_user(form.login_prefix)
-        for course in form.courses:
+        for course in form.courses.all():
             Participant(name=name, login=user['login'], course=course, ejudge_id=user['user_id']).save()
         result["ejudge_login"] = user["login"]
         result["ejudge_password"] = user["password"]

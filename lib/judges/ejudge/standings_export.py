@@ -15,7 +15,7 @@ def localize_time(time_str):
     return time_dt.astimezone(pytz.timezone('UTC')).timestamp()
 
 
-def load_ejudge_contest(contest_id, ejudge_ids):
+def load_ejudge_contest(contest_id):
     ejudge_id = '{:06d}'.format(contest_id)
     try:
         data = untangle.parse(os.path.join(EXTERNAL_DIR, ejudge_id, 'dir/external.xml'))
@@ -39,8 +39,6 @@ def load_ejudge_contest(contest_id, ejudge_ids):
             status = EJUDGE_TO_GLOBAL[run['status']]
             time = int(run['time'])
 
-            user_id = ejudge_ids[ejudge_id]
-
             prob_id = problem_index[run['prob_id']]
             score = (1 if status == OK else 0)
             if run['score'] is not None:
@@ -51,7 +49,7 @@ def load_ejudge_contest(contest_id, ejudge_ids):
                 status = DQ
 
             runs_list.append({
-                'user_id': user_id,
+                'user_id': ejudge_id,
                 'status': status,
                 'time': time,
                 'prob_id': prob_id,
@@ -59,7 +57,6 @@ def load_ejudge_contest(contest_id, ejudge_ids):
             })
         except:
             pass
-
     return [problems, runs_list]
 
 def process_ejudge_contest(contest, users):
@@ -68,7 +65,7 @@ def process_ejudge_contest(contest, users):
     for user in users:
         ejudge_ids[user.ejudge_id] = user.id
 
-    problems, runs_list = load_ejudge_contest(contest.ejudge_id, ejudge_ids)
+    problems, runs_list = load_ejudge_contest(contest.ejudge_id)
 
     user_info = {}
 

@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <title>{{ form.title }}</title>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300" rel="stylesheet">
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'form_style.css' %}">
 </head>
 
@@ -24,76 +25,76 @@
         {% for field in fields %}
             {% if field.type == field.STR %}
                 <div class="group">
-                <input class="inp" type="text" id="{{ field.internal_name }}" name="{{ field.internal_name }}" {% if field.required %}required{% endif %} placeholder="&nbsp;">
-                <label class="lab" for="{{ field.internal_name }}">
-                    {{ field.label }}{% if field.required %}<span>*</span>{% endif %}
+                <input class="inp" type="text" id="{{ field.label }}" name="{{ field.label }}" {% if field.required %}required{% endif %} placeholder="&nbsp;">
+                <label class="lab" for="{{ field.label }}">
+                    {{ field.internal_name }}{% if field.required %}<span>*</span>{% endif %}
                 </label>
                 <div class="bar"></div>
                 </div>
             {% elif field.type == field.INTEGER %}
                 <div class="group">
-                <input class="inp" type="number" id="{{ field.internal_name }}" name="{{ field.internal_name }}" {% if field.required %}required{% endif %} placeholder="&nbsp;">
-                <label class="lab" for="{{ field.internal_name }}">
-                    {{ field.label }}{% if field.required %}<span>*</span>{% endif %}
+                <input class="inp" type="number" id="{{ field.label }}" name="{{ field.label }}" {% if field.required %}required{% endif %} placeholder="&nbsp;">
+                <label class="lab" for="{{ field.label }}">
+                    {{ field.internal_name }}{% if field.required %}<span>*</span>{% endif %}
                 </label>
                 <div class="bar"></div>
                 </div>
             {% elif field.type == field.MAIL %}
                 <div class="group">
-                <input class="inp" type="email" id="{{ field.internal_name }}" name="{{ field.internal_name }}" {% if field.required %}required{% endif %} placeholder="&nbsp;">
-                <label class="lab" for="{{ field.internal_name }}">
-                    {{ field.label }}{% if field.required %}<span>*</span>{% endif %}
+                <input class="inp" type="email" id="{{ field.label }}" name="{{ field.label }}" {% if field.required %}required{% endif %} placeholder="&nbsp;">
+                <label class="lab" for="{{ field.label }}">
+                    {{ field.internal_name }}{% if field.required %}<span>*</span>{% endif %}
                 </label>
                 <div class="bar"></div>
                 </div>
             {% elif field.type == field.PHONE %}
                 <div class="group">
-                <input class="inp" type="tel" pattern="\+?[0-9\(\)\-\s]{10,}" id="{{ field.internal_name }}" name="{{ field.internal_name }}" {% if field.required %}required{% endif %} placeholder="&nbsp;">
-                <label class="lab" for="{{ field.internal_name }}">
-                    {{ field.label }}{% if field.required %}<span>*</span>{% endif %}
+                <input class="inp" type="tel" pattern="\+?[0-9\(\)\-\s]{10,}" id="{{ field.label }}" name="{{ field.label }}" {% if field.required %}required{% endif %} placeholder="&nbsp;">
+                <label class="lab" for="{{ field.label }}">
+                    {{ field.internal_name }}{% if field.required %}<span>*</span>{% endif %}
                 </label>
                 <div class="bar"></div>
                 </div>
             {% elif field.type == field.DATE %}
                 <div class="group">
-                <input class="inp" type="date" id="{{ field.internal_name }}" name="{{ field.internal_name }}" {% if field.required %}required{% endif %} placeholder="&nbsp;">
-                <label class="lab" for="{{ field.internal_name }}">
-                    {{ field.label }}{% if field.required %}<span>*</span>{% endif %}
+                <input class="inp" type="date" id="{{ field.label }}" name="{{ field.label }}" {% if field.required %}required{% endif %} placeholder="&nbsp;">
+                <label class="lab" for="{{ field.label }}">
+                    {{ field.internal_name }}{% if field.required %}<span>*</span>{% endif %}
                 </label>
                 <div class="bar"></div>
                 </div>
             {% elif field.type == field.LONG %}
                 <div class="group">
-                <textarea rows="3" id="{{ field.internal_name }}" name="{{ field.internal_name }}" {% if field.required %}required{% endif %} placeholder="&nbsp;"></textarea>
+                <textarea rows="3" id="{{ field.label }}" name="{{ field.label }}" {% if field.required %}required{% endif %} placeholder="&nbsp;"></textarea>
                 <span class="highlight"></span>
                 <span class="bar"></span>
-                <label class="lab" for="{{ field.internal_name }}">
-                    {{ field.label }}{% if field.required %}<span>*</span>{% endif %}
+                <label class="lab" for="{{ field.label }}">
+                    {{ field.internal_name }}{% if field.required %}<span>*</span>{% endif %}
                 </label>
                 </div>
             {% elif field.type == field.CHECKBOX %}
                 <div class="checkbox-row">
-                <input class="checkbox-row" type="checkbox" id="{{ field.internal_name }}" name="{{ field.internal_name }}" {% if field.required %}required{% endif %}>
-                <label class="checkbox-row" for="{{ field.internal_name }}">
-                    {{ field.label }}{% if field.required %}<span>*</span>{% endif %}
+                <input class="checkbox-row" type="checkbox" id="{{ field.label }}" name="{{ field.label }}" {% if field.required %}required{% endif %}>
+                <label class="checkbox-row" for="{{ field.label }}">
+                    {{ field.internal_name }}{% if field.required %}<span>*</span>{% endif %}
                 </label>
                 </div>
             {% elif field.type == field.TEXT %}
                 <div class="checkbox-row">
-                <div class="text-label">{{ field.label }}</div>
+                <div class="text-label">{{ field.internal_name }}</div>
                 {% if field.description %}
                     <div class="text-desc">{{ field.description }}</div>
                 {% endif %}
                 </div>
             {% elif field.type == field.SELECT %}
                 <div class="group">
-                <select class="inp" name="{{ field.internal_name }}" id="{{ field.internal_name }}" {% if field.required %}required{% endif %}>
+                <select class="inp" name="{{ field.label }}" id="{{ field.label }}" {% if field.required %}required{% endif %}>
                     {% if not field.required %}<option value="">&nbsp;</option>{% endif %}
                     {% for option in field.options %}
                         <option value="{{ option.label }}">{{ option.label }}</option>
                     {% endfor %}
                 </select>
-                <label class="lab" for="{{ field.internal_name }}">
+                <label class="lab" for="{{ field.label }}">
                     {{ field.label }}{% if field.required %}<span>*</span>{% endif %}
                 </label>
                 <div class="bar"></div>
