@@ -110,7 +110,7 @@ class MainLink(models.Model):
 class Participant(models.Model):
     name = models.TextField(help_text='Имя')
     login = models.TextField(help_text='Логин')
-    course = models.ForeignKey(Course, related_name="users")
+    course = models.ForeignKey(Course, related_name="users", on_delete=models.CASCADE)
     ejudge_id = models.IntegerField(help_text='ID в Ejudge')
 
     def save(self, force_insert: bool = ..., force_update: bool = ..., using: str | None = ..., update_fields: Iterable[str] | None = ...) -> None:
