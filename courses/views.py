@@ -17,7 +17,6 @@ class StandingsReload(View):
         course_id = request.GET.get('course_id')
         contest_type = request.GET.get('type')
         contests = Contest.objects.filter(course_id=course_id, contest_type=contest_type)
-        json.dumps()
         return JsonResponse({'contests': json.loads(serializers.serialize('json', contests))})
 
 class MainView(View):
