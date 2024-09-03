@@ -12,7 +12,7 @@
     <script>
         var standings_label = "{{ standings.label }}";
         var contest_id = {{ contest_id }};
-        var is_olymp = {% if standings.contest_type == standings.OLYMP %}true{% else %}false{% endif %};
+        var is_olymp = {% if standings.contest_type == standings.OLP %}true{% else %}false{% endif %};
     </script>
     <script src="{% static 'standings.js' %}"></script>
     {% autoescape off %}
