@@ -238,12 +238,6 @@ var addBody = function(body, users, contests) {
                 text = ""
             }
             let cell = addCell(row, text, 'gray');
-            if (is_olymp && user['scores'][idx] > 0) {
-                cell.style.backgroundColor = getScoreColor(user['scores'][idx] / problems.length);
-            }
-            else if (!is_olymp && user['scores'][idx] > 0) {
-                cell.style.backgroundColor = getMarkColor(10 * user['scores'][idx] / problems.length);
-            }
         });
     }
 };
