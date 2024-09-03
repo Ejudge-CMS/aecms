@@ -50,12 +50,13 @@
 
         ErrorLog ${APACHE_LOG_DIR}/aecms_error.log
         CustomLog ${APACHE_LOG_DIR}/aecms_access.log combined
+
         Alias /static /path/to/repo/static
         <Directory /path/to/repo/static>
                 Require all granted
         </Directory>
 
-        Alias /static /path/to/repo/files
+        Alias /files /path/to/repo/files
         <Directory /path/to/repo/files>
                 Require all granted
         </Directory>
