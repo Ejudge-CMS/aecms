@@ -99,16 +99,16 @@ def process_ejudge_contest(contest, users):
 
             info = user_info[user_id][prob_id]
 
-            if status in {IC, DQ, SV}:
-                info['penalty'] += 1
+            if info['verdict'] == DQ:
+                continue
             if status == DQ:
                 info['verdict'] = DQ
                 info['score'] = 0
                 continue
-            if info['verdict'] == DQ:
-                continue
             if info['verdict'] == OK or (info['verdict'] == PD and status != OK):
                 continue
+            if status in {IC, DQ, SV, PT}:
+                info['penalty'] += 1
             info['score'] = max(info['score'], score)
             info['verdict'] = status
         except:
