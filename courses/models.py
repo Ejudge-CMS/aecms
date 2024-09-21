@@ -36,6 +36,13 @@ class Main(models.Model):
 
     def __str__(self) -> str:
         return self.title
+    
+class Page(models.Model):
+    label = models.TextField(unique=True, help_text="Уникальная метка")
+    title = models.TextField(blank=True, help_text="Заголовок")
+    subtitle = models.TextField(blank=True, help_text="Подзаголовок")
+    is_raw = models.BooleanField(default=False, help_text="Не обрачивать в HTML и просто возвращать как текст.")
+    content = models.TextField(blank=True, help_text="Содержимое в формате HTML кода")
 
 class Teacher(models.Model):
     name = models.TextField(help_text='Название ссылки')

@@ -76,6 +76,13 @@ class FormFieldAdmin(admin.ModelAdmin):
     }
     list_display = ['id', 'label', 'type']
     inlines = [FormFieldSelectOptionInline]
+    
+@admin.register(Page)
+class PageAdmin(admin.ModelAdmin):
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
+    }
+    list_display = ['id', 'label', "title"]
 
 @admin.register(FormBuilder)
 class FormBuilderAdmin(admin.ModelAdmin):

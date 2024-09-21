@@ -18,6 +18,19 @@ class StandingsReload(View):
         contest_type = request.GET.get('type')
         contests = Contest.objects.filter(course_id=course_id, contest_type=contest_type)
         return JsonResponse({'contests': json.loads(serializers.serialize('json', contests))})
+    
+class PageView(View):
+    def get(self, request, page_label):
+        page = get_object_or_404(Page, label=page_label)
+        if page.is_raw:
+            return HttpResponse(page.content)
+        return render(
+            request,
+            'page.html',
+            {
+                'page': page,
+            }
+        )
 
 class MainView(View):
     def get(self, request, main_id=DEFAULT_MAIN):
