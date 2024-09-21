@@ -64,7 +64,7 @@ class ContestType:
     
 class Contest(models.Model, ContestType):
     name = models.TextField(help_text='Название контеста')
-    subtitle = models.TextField(help_text='Подзаголовок')
+    subtitle = models.TextField(help_text='Подзаголовок', blank=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, help_text='Курс', related_name='contests')
     ejudge_id = models.IntegerField(help_text='ID в Ejudge')
     contest_type = models.CharField(max_length=3, choices=ContestType.TYPES, default=ContestType.ACM, help_text='Тип контеста')
