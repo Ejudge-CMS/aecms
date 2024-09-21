@@ -22,7 +22,11 @@
         {% if links %}
             <h3>Полезные ссылки</h3>
             {% for link in links %}
+                {% if link.file %}
+                <a href="{{ link.file.url }}" target="_blank">{{ link.text }}</a><br>
+                {% else %}
                 <a href="{{ link.link }}" target="_blank">{{ link.text }}</a><br>
+                {% endif %}
             {% endfor %}
         {% endif %}
         {% if teachers %}
@@ -63,9 +67,23 @@
                 {% endif %}
 
                 <div class="clear"></div>
+
+                {% if contest.subtitle %}
+
+                <div class="contest_subtitle">
+                    {{ contest.subtitle }}
+                </div>
+
+                {% endif %}
+
+                <div class="clear"></div>
                 {% for link in contest.links %}
                     <div class="contest_link">
-                        <a href="{{ link.link }}" target="_blank">{{ link.text }}</a>
+                        {% if link.file %}
+                        <a href="{{ link.file.url }}" target="_blank">{{ link.text }}</a><br>
+                        {% else %}
+                        <a href="{{ link.link }}" target="_blank">{{ link.text }}</a><br>
+                        {% endif %}
                     </div>
                 {% endfor %}
 

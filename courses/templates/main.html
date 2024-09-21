@@ -23,7 +23,11 @@
     <div class="sidebar">
         <h3>Полезная информация</h3>
         {% for link in links %}
+            {% if link.file %}
+            <a href="{{ link.file.url }}" target="_blank">{{ link.text }}</a><br>
+            {% else %}
             <a href="{{ link.link }}" target="_blank">{{ link.text }}</a><br>
+            {% endif %}
         {% endfor %}
     </div>
     {% endif %}

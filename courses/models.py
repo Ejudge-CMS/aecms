@@ -2,12 +2,23 @@ from collections.abc import Iterable
 from lib.judges.ejudge.registration_api import EjudgeApiSession
 from aecms.settings import EJUDGE_AUTH, EJUDGE_URL
 from django.db import models
+from django.dispatch import receiver
+import os
 
 def course_teacher_path(instanse, filename):
     return 'teachers/{0}'.format(filename)
 
 def contest_statement_path(instance, filename):
     return 'courses/{0}/statements/{1}'.format(instance.course.label, filename)
+
+def main_link_file_path(instance, filename):
+    return 'mains/{0}/links/{1}'.format(instance.main.pk, filename)
+
+def course_link_file_path(instance, filename):
+    return 'courses/{0}/links/{1}'.format(instance.course.label, filename)
+
+def contest_link_file_path(instance, filename):
+    return 'contests/{0}/links/{1}'.format(instance.contest.pk, filename)
 
 class Course(models.Model):
     title = models.TextField(help_text='Имя курса')
@@ -53,6 +64,7 @@ class ContestType:
     
 class Contest(models.Model, ContestType):
     name = models.TextField(help_text='Название контеста')
+    subtitle = models.TextField(help_text='Подзаголовок')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, help_text='Курс', related_name='contests')
     ejudge_id = models.IntegerField(help_text='ID в Ejudge')
     contest_type = models.CharField(max_length=3, choices=ContestType.TYPES, default=ContestType.ACM, help_text='Тип контеста')
@@ -65,7 +77,8 @@ class Contest(models.Model, ContestType):
         if self.pk is None:
             rapi = EjudgeApiSession(EJUDGE_AUTH['login'], EJUDGE_AUTH['password'], EJUDGE_URL)
             for user in self.course.users.all():
-                rapi.add_registration(user.ejudge_id, user.login, self.ejudge_id, user.name)
+                if user.autoregister:
+                    rapi.add_registration(user.ejudge_id, user.login, self.ejudge_id, user.name)
         return super().save()
 
     def __str__(self) -> str:
@@ -83,6 +96,7 @@ class BigLink(models.Model):
 class ContestLink(models.Model):
     text = models.TextField(help_text='Текст ссылки')
     link = models.TextField(help_text='URL ссылки')
+    file = models.FileField(upload_to=contest_link_file_path, blank=True, help_text="Прикрепите файл, если хотите дать ссылку на него.")
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE, related_name='links')
     priority = models.IntegerField(help_text='Приоритет', default=0)
 
@@ -92,6 +106,7 @@ class ContestLink(models.Model):
 class CourseLink(models.Model):
     text = models.TextField(help_text='Текст ссылки')
     link = models.TextField(help_text='URL ссылки')
+    file = models.FileField(upload_to=course_link_file_path, blank=True, help_text="Прикрепите файл, если хотите дать ссылку на него.")
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='links')
     priority = models.IntegerField(help_text='Приоритет', default=0)
 
@@ -101,6 +116,7 @@ class CourseLink(models.Model):
 class MainLink(models.Model):
     text = models.TextField(help_text='Текст ссылки')
     link = models.TextField(help_text='URL ссылки')
+    file = models.FileField(upload_to=main_link_file_path, blank=True, help_text="Прикрепите файл, если хотите дать ссылку на него.")
     main = models.ForeignKey(Main, on_delete=models.CASCADE, help_text='Страница', related_name='links')
     priority = models.IntegerField(help_text='Приоритет', default=0)
 
@@ -112,9 +128,10 @@ class Participant(models.Model):
     login = models.TextField(help_text='Логин')
     course = models.ForeignKey(Course, related_name="users", on_delete=models.CASCADE)
     ejudge_id = models.IntegerField(help_text='ID в Ejudge')
+    autoregister = models.BooleanField(help_text='Включить авторегистрацию на контесты курса?')
 
     def save(self, force_insert: bool = ..., force_update: bool = ..., using: str | None = ..., update_fields: Iterable[str] | None = ...) -> None:
-        if self.pk is None:
+        if self.pk is None and self.autoregister:
             rapi = EjudgeApiSession(EJUDGE_AUTH['login'], EJUDGE_AUTH['password'], EJUDGE_URL)
             for contest in self.course.contests.all():
                 rapi.add_registration(self.ejudge_id, self.login, contest.ejudge_id, self.name)
@@ -195,3 +212,153 @@ class Standings(models.Model, ContestType):
 
     def __str__(self):
         return "{} ({})".format(self.label, self.title)
+
+######################################################################################################################
+
+@receiver(models.signals.post_delete, sender=ContestLink)
+def auto_delete_contest_link_file_on_delete(sender, instance, **kwargs):
+    try:
+        if instance.file:
+            if os.path.isfile(instance.file.path):
+                os.remove(instance.file.path)
+    except OSError:
+        pass
+
+
+@receiver(models.signals.pre_save, sender=ContestLink)
+def auto_delete_contest_link_file_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return False
+
+    try:
+        old_file = ContestLink.objects.get(pk=instance.pk).file
+    except ContestLink.DoesNotExist:
+        return False
+    if not old_file:
+        return False
+    try:
+        new_file = instance.file
+        if not old_file == new_file:
+            if os.path.isfile(old_file.path):
+                os.remove(old_file.path)
+    except OSError:
+        pass
+
+
+@receiver(models.signals.post_delete, sender=CourseLink)
+def auto_delete_course_link_file_on_delete(sender, instance, **kwargs):
+    try:
+        if instance.file:
+            if os.path.isfile(instance.file.path):
+                os.remove(instance.file.path)
+    except OSError:
+        pass
+
+
+@receiver(models.signals.pre_save, sender=CourseLink)
+def auto_delete_course_link_file_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return False
+
+    try:
+        old_file = CourseLink.objects.get(pk=instance.pk).file
+    except CourseLink.DoesNotExist:
+        return False
+    if not old_file:
+        return False
+    try:
+        new_file = instance.file
+        if not old_file == new_file:
+            if os.path.isfile(old_file.path):
+                os.remove(old_file.path)
+    except OSError:
+        pass
+
+
+@receiver(models.signals.post_delete, sender=MainLink)
+def auto_delete_main_link_file_on_delete(sender, instance, **kwargs):
+    try:
+        if instance.file:
+            if os.path.isfile(instance.file.path):
+                os.remove(instance.file.path)
+    except:
+        pass
+
+
+@receiver(models.signals.pre_save, sender=MainLink)
+def auto_delete_main_link_file_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return False
+
+    try:
+        old_file = MainLink.objects.get(pk=instance.pk).file
+    except MainLink.DoesNotExist:
+        return False
+    if not old_file:
+        return False
+    try:
+        new_file = instance.file
+        if not old_file == new_file:
+            if os.path.isfile(old_file.path):
+                os.remove(old_file.path)
+    except OSError:
+        pass
+
+
+@receiver(models.signals.post_delete, sender=Contest)
+def auto_delete_statement_file_on_delete(sender, instance, **kwargs):
+    if instance.statements:
+        try:
+            os.remove(instance.statements.path)
+        except OSError:
+            pass
+
+
+@receiver(models.signals.pre_save, sender=Contest)
+def auto_delete_statement_file_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return False
+
+    try:
+        old_statements = Contest.objects.get(pk=instance.pk).statements
+    except Contest.DoesNotExist:
+        return False
+    if not old_statements:
+        return False
+    try:
+        new_statements = instance.statements
+        if not old_statements == new_statements:
+            if os.path.isfile(old_statements.path):
+                os.remove(old_statements.path)
+    except OSError:
+        pass
+
+
+@receiver(models.signals.post_delete, sender=Teacher)
+def auto_delete_teacher_photo_file_on_delete(sender, instance, **kwargs):
+    try:
+        if instance.photo:
+            if os.path.isfile(instance.photo.path):
+                os.remove(instance.photo.path)
+    except OSError:
+        pass
+
+
+@receiver(models.signals.pre_save, sender=Teacher)
+def auto_delete_teacher_photo_file_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return False
+
+    try:
+        old_file = Teacher.objects.get(pk=instance.pk).photo
+    except Teacher.DoesNotExist:
+        return False
+    if not old_file:
+        return False
+    try:
+        new_file = instance.photo
+        if not old_file == new_file:
+            if os.path.isfile(old_file.path):
+                os.remove(old_file.path)
+    except OSError:
+        pass
