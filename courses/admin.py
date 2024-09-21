@@ -55,6 +55,13 @@ class CourseAdmin(admin.ModelAdmin):
     list_display = ['id', 'title', 'subtitle']
     inlines = [CourseLinkInline]
 
+@admin.register(Teacher)
+class TeacherAdmin(admin.ModelAdmin):
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 1, 'cols': 40})},
+    }
+    list_display = ['id', 'name']
+
 @admin.register(Contest)
 class ContestAdmin(admin.ModelAdmin):
     formfield_overrides = {
