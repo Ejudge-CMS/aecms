@@ -5,6 +5,7 @@ urlpatterns = [
     path('', MainView.as_view(), name='main'),
     path('main/<int:main_id>/', MainView.as_view(), name='main'),
     path('standings_contests/', StandingsReload.as_view(), name='standings_reload'),
+    path('page/<str:page_label>/', PageView.as_view(), name='page'),
     path('<str:course_label>/', CourseView.as_view(), name='course'),
     path('standings/<str:standings_label>/', StandingsView.as_view(), name='standings'),
     path('standings/<str:standings_label>/<int:contest_id>/', StandingsView.as_view(), name='standings'),
