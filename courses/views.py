@@ -147,7 +147,7 @@ class FormView(View):
         api_session = EjudgeApiSession(EJUDGE_AUTH['login'], EJUDGE_AUTH['password'], EJUDGE_URL)
         user = api_session.create_user(form.login_prefix)
         for course in form.courses.all():
-            Participant(name=name, login=user['login'], course=course, ejudge_id=user['user_id']).save()
+            Participant(name=name, login=user['login'], course=course, ejudge_id=user['user_id'], autoregister=form.autoregister).save()
         result["ejudge_login"] = user["login"]
         result["ejudge_password"] = user["password"]
         result["ejudge_id"] = user["user_id"]

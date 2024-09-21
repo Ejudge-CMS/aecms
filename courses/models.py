@@ -156,6 +156,7 @@ class FormBuilder(models.Model):
     register_name_template = models.TextField(help_text='Шаблон имени')
     login_prefix = models.TextField(help_text='Префикс логина')
     courses = models.ManyToManyField(Course, help_text='Курсы', related_name='forms')
+    autoregister = models.BooleanField(help_text='Включить авторегистрацию на контесты курсов?')
 
     def __str__(self) -> str:
         return self.label
