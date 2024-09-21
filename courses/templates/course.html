@@ -68,12 +68,10 @@
 
                 <div class="clear"></div>
 
-                {% if contest.subtitle %}
-
-                <div class="contest_subtitle">
-                    {{ contest.subtitle }}
+                {% if contest.contest.subtitle %}
+                <div class="contest_link">
+                    {{ contest.contest.subtitle }}
                 </div>
-
                 {% endif %}
 
                 <div class="clear"></div>
