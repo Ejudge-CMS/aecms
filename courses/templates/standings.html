@@ -13,6 +13,11 @@
         var standings_label = "{{ standings.label }}";
         var contest_id = {{ contest_id }};
         var is_olymp = {% if standings.type == "OLP" %}true{% else %}false{% endif %};
+        var is_penalty = {% if standings.enable_penalty %}true{% else %}false{% endif %};
+        var is_scoring = {% if standings.enable_scoring %}true{% else %}false{% endif %};
+        newAddProblemHeaderCell = {% if standings.prob_js and standings.enable_scoring %}{{ standings.prob_js|safe }}{% else %}null{% endif %};
+        newAddTotalMarkCell =  {% if standings.total_mark_js and standings.enable_scoring %}{{ standings.total_mark_js|safe }}{% else %}null{% endif %};
+        newAddContestMarkCell = {% if standings.contest_mark_js and standings.enable_scoring %}{{ standings.contest_mark_js|safe }}{% else %}null{% endif %};
     </script>
     <script src="{% static 'standings.js' %}"></script>
     {% autoescape off %}
@@ -29,3 +34,4 @@
 
 </body>
 </html>
+

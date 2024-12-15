@@ -67,7 +67,7 @@ class CourseView(View):
                 'course': course,
                 'contests': contests,
                 'links': links,
-                'ejudge_url': '{0}/cgi-bin/new-client?contest_id='.format(EJUDGE_URL),
+                'ejudge_url': '{0}/new-client?contest_id='.format(EJUDGE_URL),
                 'teachers': course.teachers.order_by("priority")
             }
         )

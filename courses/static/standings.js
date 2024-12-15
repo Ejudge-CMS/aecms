@@ -1,3 +1,28 @@
+addProblemHeaderCell = function(row, contest_id, problem) {
+    try {
+        newAddProblemHeaderCell(row, contest_id, problem);
+    } catch (error) {   
+        let cell = addCell(row, problem['short'], 'problem_letter gray');
+        cell.title = problem['long'];
+    }
+}
+
+addContestMarkCell = function(row, contest, user) {
+    try {
+        newAddContestMarkCell(row, contest, user);
+    } catch (error) {
+        let cell = addCell(row, "", "gray");
+    }
+}       
+        
+addTotalMarkCell = function(row, contests, user) {
+    try {
+        newAddTotalMarkCell(row, contests, user);
+    } catch (error) {
+        let cell = addCell(row, "", "");
+    }
+} 
+
 let _dom_loaded = false;
 let _data = null;
 
@@ -108,7 +133,21 @@ var addProblemCell = function(row, problem) {
             let cell = addCell(row, '<div></div>', 'gray defense');
             cell.title = 'Вызвано на защиту';
         } else if (problem['verdict'] === 'SV') {
-            let cell = addCell(row, '<div></div>', 'gray ban');
+            let cell = null;
+            if (penalty === 0) {
+                cell = addCell(row, '', 'gray');
+            } else {
+                let text = '-';
+                if (penalty <= 9) {
+                    text += penalty;
+                } else {
+                    text = add_inf(text);
+                }
+                cell = addCell(row, text, 'ban');
+                if (penalty > 0) {
+                    cell.title = '-' + penalty;
+                }
+            }
             cell.title = 'Нарушение правил оформления программ';
         } else if (problem['verdict'] === 'PD') {
             let cell = addCell(row, '?', 'gray');
@@ -142,34 +181,42 @@ var addHeader = function(holder, contests) {
     let header_row2 = holder.insertRow();
     addCell(header_row1, 'Место', '', 2, 1);
     addCell(header_row1, 'Фамилия и имя', '', 2, 1);
+    if (is_scoring) {
+        addCell(header_row1, 'Оценка', '', 2, 1);
+    }
     addCell(header_row1, (is_olymp ? 'Балл' : 'Решено'), '', 2, 1);
-    if (!is_olymp) {
+    if (!is_olymp && is_penalty) {
         addCell(header_row1, 'Штраф', '', 2, 1);
     }
-
+        
     if (contests.length === 0) {
         addCell(header_row1, '', 'invisible contest_title');
         addCell(header_row2, '', 'invisible');
-    }
-
+    }   
+            
     contests.forEach(function(contest, idx) {
         let problems = contest['problems'];
         let title_text = contest['title'];
-        let title;
+        let max_length = 30;
+        if (title_text.length > max_length) {
+            title_text = title_text.slice(0, max_length) + "...";
+        }
+        let title; 
         if (contest_id === -1) {
             title = '<a href="./' + (contests.length - 1 - idx) + '/">' + title_text + '</a>';
         } else {
             title = title_text;
         }
-        addCell(header_row1, title, 'gray contest_title', 1, problems.length + 1);
+        addCell(header_row1, title, 'gray contest_title', 1, problems.length + 1 + is_scoring);
         problems.forEach(function(problem) {
-            let cell = addCell(header_row2, problem['short'], 'problem_letter gray');
-            cell.title = problem['long'];
+            addProblemHeaderCell(header_row2, contest['id'], problem);
         });
         addCell(header_row2, 'Σ', 'problem_letter gray');
+        if (is_scoring) {
+            addCell(header_row2, 'М', 'problem_letter gray');
+        }
     });
 };
-
 var fixColumnWidths = function (objs) {
     let results_pos = objs[0].childNodes[0].childNodes.length;
     objs[0].childNodes[0].childNodes.forEach(function (column, idx) {
@@ -224,8 +271,11 @@ var addBody = function(body, users, contests) {
         let row = body.insertRow();
         addCell(row, i + 1);
         addCell(row, user['name'], 'name');
+        if (is_scoring) {
+                addTotalMarkCell(row, contests, user);
+        }
         addCell(row, user['score']);
-        if (!is_olymp) {
+        if (!is_olymp && is_penalty) {
             addCell(row, user['penalty']);
         }
         contests.forEach(function (contest, idx) {
@@ -238,10 +288,12 @@ var addBody = function(body, users, contests) {
                 text = ""
             }
             let cell = addCell(row, text, 'gray');
+            if (is_scoring) {
+                    addContestMarkCell(row, contest, user);
+            }
         });
     }
 };
-
 var buildStandings = function() {
     if (!_dom_loaded) {
         return;
@@ -274,8 +326,8 @@ var buildStandings = function() {
     addHeader(header, contests);
     addHeader(body, contests);
     addBody(body, users, contests);
-    addHeader(body_fixed, []);
-    addBody(body_fixed, users, []);
+    addHeader(body_fixed, contests);
+    addBody(body_fixed, users, contests);
     fixColumnWidths([header, body_fixed, body], contests);
 
     document.getElementsByClassName('wrapper')[0].addEventListener('scroll', function(e) {

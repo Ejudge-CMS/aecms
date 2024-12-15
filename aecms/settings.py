@@ -35,7 +35,7 @@ DEFAULT_MAIN = int(config_json['default-main'])
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-81a!_%rwdn!)3wcg5+grfej_72zcm852#^svae66dd9ehpoq8-'
+SECRET_KEY = 'django-insecure'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

@@ -213,7 +213,12 @@ class Standings(models.Model, ContestType):
     label = models.TextField(unique=True, help_text='Идентификатор')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, help_text='Курс')
     contests = models.ManyToManyField(Contest, help_text='Контесты', related_name='standings')
+    enable_penalty = models.BooleanField(default=False, help_text='Отображать штраф')
     type = models.CharField(max_length=3, choices=ContestType.TYPES, default=ContestType.ACM)
+    enable_scoring = models.BooleanField(default=False, help_text='Считать оценки')
+    total_mark_js = models.TextField(blank=True, help_text="Код для отображения общей ячейки оценки")
+    contest_mark_js = models.TextField(blank=True, help_text="Код для отображения ячейки оценки контеста")
+    prob_js = models.TextField(blank=True, help_text="Код для отображения ячейки задачи")
 
     class Meta:
         verbose_name_plural = "Standings"
