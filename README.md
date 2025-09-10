@@ -4,7 +4,7 @@
 
 Клонируйте репозиторий в папку /opt:
 ```console
-[/opt] $ git clone https://github.com/Semen-prog/aecms
+[/opt] $ git clone https://github.com/Ejudge-CMS/aecms
 [/opt] $ cd aecms
 ```
 
