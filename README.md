@@ -1,6 +1,8 @@
 # AECMS
 
-## Руководство по установке (Ubuntu)
+## Руководство по установке
+
+### Конфигурация сайта
 
 Клонируйте репозиторий в папку /opt:
 ```console
@@ -27,7 +29,9 @@
 (your_env) [/opt/aecms] $ ./manage.py createsuperuser
 ```
 
-## Настройка Apache
+Добавьте имя вашего сайта в список ALLOWED_HOSTS в файле `/opt/aecms/aecms/settings.py`, а также (в целях безопасности) измените значение переменной `DEBUG` в том же файле с `True` на `False`.
+
+#### Настройка Apache (Ubuntu)
 
 Все команды далее выполняются от пользователя root.
 
@@ -100,6 +104,74 @@ Listen 8000
 ```
 
 Добавьте ваш хост в список-переменную ALLOWED_HOSTS в файле aecms/aecms/settings.py
+
+### Настройка Apache (Fedora)
+
+Все команды далее выполняются от пользователя root.
+
+Настройте права:
+```console
+[/opt/aecms] # chown -R your_user:apache .
+[/opt/aecms] # chmod -R 775 .
+```
+
+Создайте конфигурационный файл сайта:
+```console
+# vim /etc/httpd/conf.d/aecms.conf
+```
+
+Заполните его (/path/to/repo - путь до репозитория, вероятно равен /opt/aecms):
+```vim
+<VirtualHost *:8000>
+
+        DocumentRoot /path/to/repo/
+
+        ErrorLog /var/log/httpd/aecms_error.log
+        CustomLog /var/log/httpd/aecms_access.log combined
+
+        Alias /static /path/to/repo/static
+        <Directory /path/to/repo/static>
+                Require all granted
+        </Directory>
+
+        Alias /files /path/to/repo/files
+        <Directory /path/to/repo/files>
+                Require all granted
+        </Directory>
+
+        <Directory /path/to/repo/aecms>
+                <Files wsgi.py>
+                        Require all granted
+                </Files>
+        </Directory>
+
+        WSGIDaemonProcess alg-ej.ru python-path=/path/to/repo python-home=/path/to/repo/your_env
+        WSGIProcessGroup alg-ej.ru
+        WSGIApplicationGroup %{GLOBAL}
+        WSGIScriptAlias / /path/to/repo/aecms/wsgi.py
+
+</VirtualHost>
+```
+
+Разрешите порт. В файле /etc/httpd/conf/httpd.conf допишите:
+```vim
+...
+
+Listen 8000
+
+...
+```
+
+Установите модуль wsgi:
+
+```console
+# dnf install mod_wsgi
+```
+
+Запустите сайт:
+```console
+# systemctl reload httpd
+```
 
 ## Конфигурационный файл
 
