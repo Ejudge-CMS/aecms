@@ -105,7 +105,7 @@ Listen 8000
 
 Добавьте ваш хост в список-переменную ALLOWED_HOSTS в файле aecms/aecms/settings.py
 
-### Настройка Apache (Fedora)
+#### Настройка Apache (Fedora)
 
 Все команды далее выполняются от пользователя root.
 
